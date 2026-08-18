@@ -283,7 +283,7 @@ def test_qwen3_8b_actor_rollout_lora_config_validates():
     assert processed.actor_rollout_ref.rollout.gpu_memory_utilization == 0.6
     assert processed.actor_rollout_ref.rollout.n == 5
     assert processed.actor_rollout_ref.rollout.prompt_length == 512
-    assert processed.actor_rollout_ref.rollout.response_length == 1024
+    assert processed.actor_rollout_ref.rollout.response_length == 2048
     assert processed.actor_rollout_ref.rollout.log_prob_use_dynamic_bsz is True
     assert processed.actor_rollout_ref.rollout.log_prob_max_token_len_per_gpu == 12288
     assert processed.actor_rollout_ref.rollout.load_format == "safetensors"
