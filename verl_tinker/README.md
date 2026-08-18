@@ -10,8 +10,10 @@ one active training client at a time, not isolated multi-client sessions.
 
 ## News
 
-- 2026-07-04: Released `verl-tinker` 🚀
+- 2026-08-18: Add in support for lora training
 - 2026-07-24: Add in support for Teacher models to enable OPD workflows 🧑‍🏫
+- 2026-07-04: Released `verl-tinker` 🚀
+
 
 ## Install
 
