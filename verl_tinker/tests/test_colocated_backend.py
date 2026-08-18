@@ -22,6 +22,7 @@ operations.
 import asyncio
 import logging
 import threading
+from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -174,6 +175,40 @@ def test_lora_exposes_reference_capability_without_reference_config():
         backend = ColocatedBackend(config)
 
     assert backend.capabilities.use_reference_policy is True
+
+
+def test_init_rollout_replicas_wraps_load_balancer_as_ray_actor():
+    config = _make_config()
+    config.actor_rollout_ref.rollout.full_determinism = True
+    backend = _make_backend(config)
+    backend.actor_rollout_wg.world_size = 1
+    backend._enable_offload = False
+    replica = SimpleNamespace(
+        server_address="http://rollout-0",
+        _server_handle=MagicMock(name="server_handle"),
+        init_hybrid=MagicMock(return_value="init_hybrid"),
+    )
+    replica_class = MagicMock(return_value=replica)
+    remote_actor_class = MagicMock(name="remote_actor_class")
+    load_balancer_handle = remote_actor_class.remote.return_value
+
+    from verl.workers.rollout.llm_server import GlobalRequestLoadBalancer
+
+    with (
+        patch(f"{_BACKEND_MODULE}.get_rollout_replica_class", return_value=replica_class),
+        patch(f"{_BACKEND_MODULE}.omega_conf_to_dataclass", return_value=MagicMock()),
+        patch(f"{_BACKEND_MODULE}.CheckpointEngineManager"),
+        patch(f"{_BACKEND_MODULE}.ray.remote", return_value=remote_actor_class) as remote,
+        patch.object(backend, "_run_all"),
+    ):
+        backend._init_rollout_replicas()
+
+    remote.assert_called_once_with(GlobalRequestLoadBalancer)
+    remote_actor_class.remote.assert_called_once_with(
+        servers={replica.server_address: replica._server_handle},
+        full_determinism=True,
+    )
+    assert backend.server_manager._load_balancer is load_balancer_handle
 
 
 def _make_backend(config):

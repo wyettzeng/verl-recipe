@@ -371,7 +371,10 @@ class ColocatedBackend:
         from verl.workers.rollout.llm_server import GlobalRequestLoadBalancer
 
         servers = {r.server_address: r._server_handle for r in self.rollout_replicas}
-        load_balancer = GlobalRequestLoadBalancer.remote(servers=servers)
+        load_balancer = ray.remote(GlobalRequestLoadBalancer).remote(
+            servers=servers,
+            full_determinism=getattr(rollout_config, "full_determinism", False),
+        )
         self._server_manager = LLMServerClient(config, load_balancer)
 
         ckpt_engine_config = omega_conf_to_dataclass(rollout_config.checkpoint_engine)
