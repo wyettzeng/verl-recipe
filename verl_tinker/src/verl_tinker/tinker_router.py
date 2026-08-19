@@ -551,8 +551,10 @@ class TinkerServer:
     async def shutdown(self, request: Request) -> StatusResponse:
         """Compatibility shutdown endpoint for existing launch helpers."""
         self._begin_shutdown()
-        if self._shutdown_task is None or self._shutdown_task.done():
-            self._shutdown_task = asyncio.create_task(self._shutdown_process())
+        # if self._shutdown_task is None or self._shutdown_task.done():
+        #     self._shutdown_task = asyncio.create_task(self._shutdown_process())
+        self._status = ServerStatus.SHUTDOWN_COMPLETE
+        self._error = None
         return StatusResponse(status="accepted")
 
     @app.api_route("/api/v1/get_server_capabilities", methods=["GET", "POST"])
