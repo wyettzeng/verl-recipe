@@ -133,12 +133,13 @@ def test_teacher_backend_dedicated_pools_allocate_largest_teacher_first():
     ) in backend.sampling_targets
 
 
-def test_teacher_backend_shutdown_kills_teacher_frontends_without_waiting():
+def test_teacher_backend_shutdown_kills_teacher_actors_without_waiting():
     backend = object.__new__(TeacherInferenceBackend)
     servers = [MagicMock(), MagicMock()]
+    workers = [MagicMock(), MagicMock()]
     manager = SimpleNamespace(
         load_balancer_handle=MagicMock(),
-        rollout_replicas=[SimpleNamespace(servers=servers)],
+        rollout_replicas=[SimpleNamespace(servers=servers, workers=workers)],
     )
     backend._managers = {"teacher": manager}
 
@@ -148,6 +149,7 @@ def test_teacher_backend_shutdown_kills_teacher_frontends_without_waiting():
     assert kill.call_args_list == [
         call(manager.load_balancer_handle, no_restart=True),
         *(call(server, no_restart=True) for server in servers),
+        *(call(worker, no_restart=True) for worker in workers),
     ]
 
 
