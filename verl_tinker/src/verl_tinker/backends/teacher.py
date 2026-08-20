@@ -9,7 +9,6 @@ from __future__ import annotations
 import copy
 from dataclasses import dataclass
 
-import ray
 from omegaconf import DictConfig
 
 from verl.experimental.teacher_loop.teacher_model import TeacherModelManager
@@ -175,10 +174,3 @@ class TeacherInferenceBackend:
 
     def get_client(self, model_path: str) -> TeacherClient:
         return self._clients[model_path]
-
-    def shutdown(self) -> None:
-        for manager in self._managers.values():
-            ray.kill(manager.load_balancer_handle, no_restart=True)
-            for replica in manager.rollout_replicas:
-                for server in replica.servers:
-                    ray.kill(server, no_restart=True)
