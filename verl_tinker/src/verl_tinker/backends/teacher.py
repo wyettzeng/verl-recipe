@@ -182,5 +182,3 @@ class TeacherInferenceBackend:
             for replica in manager.rollout_replicas:
                 for server in replica.servers:
                     ray.kill(server, no_restart=True)
-                for worker in replica.workers:
-                    ray.kill(worker, no_restart=True)
