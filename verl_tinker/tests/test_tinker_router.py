@@ -112,10 +112,12 @@ async def test_shutdown_immediately_marks_router_complete():
     server._status = ServerStatus.INITIALIZED
     server._error = None
     server._shutdown_started = False
+    server._teacher_backend = MagicMock()
 
     response = await server.shutdown(None)
 
     assert response.status == "accepted"
+    server._teacher_backend.shutdown.assert_called_once_with()
     assert server._shutdown_started is True
     assert await server.healthz() == {"status": ServerStatus.SHUTDOWN_COMPLETE.value}
 

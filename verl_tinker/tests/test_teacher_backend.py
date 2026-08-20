@@ -1,5 +1,5 @@
 from types import SimpleNamespace
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, call, patch
 
 import pytest
 from omegaconf import OmegaConf
@@ -131,6 +131,24 @@ def test_teacher_backend_dedicated_pools_allocate_largest_teacher_first():
         "Qwen/Qwen3-235B-A22B-Instruct-2507",
         "/models/qwen3-235b",
     ) in backend.sampling_targets
+
+
+def test_teacher_backend_shutdown_kills_teacher_frontends_without_waiting():
+    backend = object.__new__(TeacherInferenceBackend)
+    servers = [MagicMock(), MagicMock()]
+    manager = SimpleNamespace(
+        load_balancer_handle=MagicMock(),
+        rollout_replicas=[SimpleNamespace(servers=servers)],
+    )
+    backend._managers = {"teacher": manager}
+
+    with patch("verl_tinker.backends.teacher.ray.kill") as kill:
+        backend.shutdown()
+
+    assert kill.call_args_list == [
+        call(manager.load_balancer_handle, no_restart=True),
+        *(call(server, no_restart=True) for server in servers),
+    ]
 
 
 @pytest.mark.asyncio

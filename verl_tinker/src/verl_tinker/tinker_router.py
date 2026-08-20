@@ -482,6 +482,8 @@ class TinkerServer:
     @app.post("/api/v1/shutdown")
     async def shutdown(self, request: Request) -> StatusResponse:
         """Compatibility shutdown endpoint for existing launch helpers."""
+        if not self._shutdown_started and (teacher_backend := getattr(self, "_teacher_backend", None)):
+            teacher_backend.shutdown()
         self._shutdown_started = True
         self._status = ServerStatus.SHUTDOWN_COMPLETE
         self._error = None
